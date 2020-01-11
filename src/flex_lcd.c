@@ -72,92 +72,57 @@ clear_lcd(void)
    Esta funcion limpia de texto el lcd y retorna a la posicion 00 del mismo
  */
 
+/*
 //-------------------------------------
 void lcd_send_nibble(int8 nibble)  {
     // Note:  !! converts an integer expression
     // to a boolean (1 or 0).
-    output_bit(LCD_DB4, !!(nibble & 1));
-    output_bit(LCD_DB5, !!(nibble & 2));
-    output_bit(LCD_DB6, !!(nibble & 4));
-    output_bit(LCD_DB7, !!(nibble & 8));
+    output_bit(DB4, !!(nibble & 1));
+    output_bit(DB5, !!(nibble & 2));
+    output_bit(DB6, !!(nibble & 4));
+    output_bit(DB7, !!(nibble & 8));
 
     delay_us(10);          //Ojo antes era 1 ciclo
-    output_high(LCD_E);
+    output_high(EN);
     delay_us(20);          //Ojo antes era 2 us
-    output_low(LCD_E);
+    output_low(EN);
 }
 
-//-----------------------------------
-// This sub-routine is only called by lcd_read_byte().
-// It's not a stand-alone routine.  For example, the
-// R/W signal is set high by lcd_read_byte() before
-// this routine is called.
 
-#ifdef USE_LCD_RW
-int8 lcd_read_nibble(void)
-{
-    int8 retval;
-    // Create bit variables so that we can easily set
-    // individual bits in the retval variable.
-#bit retval_0 = retval.0
-#bit retval_1 = retval.1
-#bit retval_2 = retval.2
-#bit retval_3 = retval.3
+*/
 
-    retval = 0;
 
-    output_high(LCD_E);
-    delay_us(10);
-
-    retval_0 = input(LCD_DB4);
-    retval_1 = input(LCD_DB5);
-    retval_2 = input(LCD_DB6);
-    retval_3 = input(LCD_DB7);
-
-    output_low(LCD_E);
-
-    return(retval);
+static void toogle_enable_pin(void) {
+    lcd_hw.delay_ms(1);         //toogle del pin EN necesario
+    lcd_hw.bit_out(EN,HIGH);
+    lcd_hw.delay_ms(1);
+    lcd_hw.bit_out(EN,LOW);
 }
-#endif
 
-//---------------------------------------
-// Read a byte from the LCD and return it.
 
-#ifdef USE_LCD_RW
-int8 lcd_read_byte(void)
-{
-    int8 low;
-    int8 high;
-
-    output_high(LCD_RW);
-    delay_us(10);
-
-    high = lcd_read_nibble();
-
-    low = lcd_read_nibble();
-
-    return( (high<<4) | low);
-}
-#endif
 
 //----------------------------------------
 // Send a byte to the LCD.
-void lcd_send_byte(bool address, uint8_t n)  {
-    lcd_hw.bit_out(LCD_RS,LOW)
+//----------------------------------------
 
-    lcd_hw.delay_us(60);    //Ojo antes 60 us
+void lcd_send_byte(bool address, uint8_t n)  {
+    lcd_hw.bit_out(RS,LOW)
+
+    lcd_hw.delay_ms(1);    //Ojo antes 60 us
 
     if(address)
-        lcd_hw.bit_out(LCD_RS,HIGH);
+        lcd_hw.bit_out(RS,HIGH);
     else
-        lcd_hw.bit_out(LCD_RS,LOW);
+        lcd_hw.bit_out(RS,LOW);
 
-    lcd_hw.delay_us(10);
-
-    lcd_hw.bit_out(LCD_E,LOW);
+    lcd_hw.delay_ms(1);
+    lcd_hw.bit_out(EN,LOW);
 
     lcd_hw.nibble_out(n >> 4);
-    lcd_hw.nibble_out(n & 0xf);
+    toogle_enable_pin();
+
+    lcd_hw.nibble_out(n & 0x0F);
+    toogle_enable_pin();
 }
 
 //----------------------------
@@ -165,22 +130,26 @@ void lcd_init(lcd_hal hw_functions)  {
 
     lcd_hw = hw_functions;
 
-    lcd_hw.bit_out(LCD_RS,LOW);
-    lcd_hw.bit_out(LCD_E,LOW);
+    lcd_hw.bit_out(RS,LOW);
+    lcd_hw.bit_out(EN,LOW);
     lcd_hw.delay_ms(15);
 
     /*
      * TODO: Ver que corcho son los MAGIC NUMBERS
      */
     lcd_hw.nibble_out(0x03);
+    toogle_enable_pin();
     lcd_hw.delay_ms(5);
+
     lcd_hw.nibble_out(0x03);
-    lcd_hw.delay_us(200);
+    toogle_enable_pin();
+    lcd_hw.delay_ms(1);
+
     lcd_hw.nibble_out(0x03);
+    toogle_enable_pin();
 
     lcd_hw.nibble_out(0x02);
-
-
+    toogle_enable_pin();
 
 
     lcd_send_byte(0,(0x20 | (lcd_type << 2)));  // Func set: ver lcd_type

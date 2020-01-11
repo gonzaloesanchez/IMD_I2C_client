@@ -5,15 +5,14 @@
 #include <stdbool.h>
 
 //Definiciones de constantes para los pines de datos
-#define LCD_DB4   0x00
-#define LCD_DB5   0x01
-#define LCD_DB6   0x02
-#define LCD_DB7   0x04
+#define DB4   0x00
+#define DB5   0x01
+#define DB6   0x02
+#define DB7   0x04
 
 //Definiciones de constantes para los pines de control
-#define LCD_RS    0x08
-#define LCD_RW    0x10
-#define LCD_E     0x20
+#define RS    0x08
+#define EN    0x10
 
 
 #define BLINK_ON 1
