@@ -5,24 +5,25 @@
 #include <stdbool.h>
 
 //Definiciones de constantes para los pines de datos
-#define DB4   0x00
-#define DB5   0x01
-#define DB6   0x02
-#define DB7   0x04
+#define DB4   0x0000
+#define DB5   0x0001
+#define DB6   0x0002
+#define DB7   0x0004
 
 //Definiciones de constantes para los pines de control
-#define RS    0x08
-#define EN    0x10
+#define RS    0x0008
+#define EN    0x0010
 
 
-#define BLINK_ON 1
-#define BLINK_OFF 0
-#define CURSOR_ON 1
-#define CURSOR_OFF 0
+#define BLINK_ON    1
+#define BLINK_OFF   0
 
-#define LOW     false
-#define HIGH    true
+#define CURSOR_ON   1
+#define CURSOR_OFF  0
 
+#define LOW         false
+#define HIGH        true
+#define NULL        '\0'
 // If you only want a 6-pin interface to your LCD, then
 // connect the R/W pin on the LCD to ground, and comment
 // out the following line.
@@ -52,12 +53,16 @@
  */
 
 struct _lcd_hal  {
-    void (*delay_us)(uint16_t X);
+    //void (*delay_us)(uint16_t X);
     void (*delay_ms)(uint32_t X);
     void (*nibble_out)(uint8_t X);
-    void (*bit_out)(uint8_t pin, bool out);
+    void (*bit_out)(uint16_t pin, bool out);
 };
 
 typedef struct _lcd_hal lcd_hal;
+
+void lcd_init(lcd_hal hw_functions);
+void lcd_gotoxy(uint8_t x, uint8_t y);
+void lcd_write(char c[]);
 
 #endif

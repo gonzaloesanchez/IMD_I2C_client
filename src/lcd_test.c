@@ -29,7 +29,6 @@
 //TODO: Si se complica puedo multiplexar con un CD (serie/paralelo)
 
 
-
 lcd_hal funciones_hal_lcd;
 uint32_t msTicks;
 
@@ -63,17 +62,63 @@ __interrupt void    TimerA0_TA(void)  {
 
 
 void delay_ms(uint32_t delayTicks)  {
-    uint32_t currTicks;
-
-    msTicks = currTicks = 0;
-    while((msTicks-currTicks) < delayTicks)
+    msTicks = 0;
+    while((msTicks) < delayTicks)
         LPM0;                                //SMCK queda activo, lo necesitamos para el tick
 }
 
 
 void output_nible(uint8_t X) {
+    uint8_t puerto;
 
+    /*
+     * Se lee el valor actual del puerto para no afectar las señales de control
+     * Se limpia la parte baja, se desplazan los bits recibidos como argumento
+     * 4 posiciones (nibble bajo pasa a ser nibble alto)
+     * Se hace un OR con el valor anterior de la parte baja del puerto
+     * se saca por el puerto.
+     *
+     * Esto se puede hacer porque los pines [4..7] coinciden con LCD_DB[4..7]
+     */
 
+    puerto = LCD_OUT;
+    puerto &= 0x0F;
+    puerto |= (X & 0x0F) << 4;
+    LCD_OUT = puerto;
+}
+
+void output_bit(uint16_t pin_id, bool out) {
+
+    switch(pin_id)  {
+    case RS:
+        if(out)
+            SetBit(LCD_OUT,LCD_RS_PIN);
+        else
+            RstBit(LCD_OUT,LCD_RS_PIN);
+        break;
+
+    case EN:
+        if(out)
+            SetBit(LCD_OUT,LCD_EN_PIN);
+        else
+            RstBit(LCD_OUT,LCD_EN_PIN);
+        break;
+
+    case DB4:
+        break;
+
+    case DB5:
+        break;
+
+    case DB6:
+        break;
+
+    case DB7:
+        break;
+
+    default:
+        ;
+    }
 }
 
 
@@ -93,13 +138,20 @@ void main(void)  {
 	//MCLK = 1MHz; SMCLK = 1MHz
 	ConfigTimer0_A1();
 
-	SetBit(LCD_DB_DIR, LCD_DB4_PIN | LCD_DB5_PIN | LCD_DB6_PIN | LCD_DB7_PIN);    //LCD_DB [4..7] -> Salida
+	SetBit(LCD_DIR, LCD_DB4_PIN | LCD_DB5_PIN | LCD_DB6_PIN | LCD_DB7_PIN);    //LCD_DB [4..7] -> Salida
+	SetBit(LCD_DIR, LCD_EN_PIN | LCD_RS_PIN );    //Señales de control LCD (EN y RS) -> Salida
+
+
+	funciones_hal_lcd.delay_ms = delay_ms;          //funcion de retardo
+	funciones_hal_lcd.nibble_out = output_nible;    //funcion salida nible
+	funciones_hal_lcd.bit_out = output_bit;         //funcion salida bit
+
+	lcd_init(funciones_hal_lcd);
+
+	lcd_gotoxy(0, 0);
+	lcd_write("Hola mundo!");
 
 	while(1)  	{
-	    funciones_hal_lcd.delay_ms = delay_ms;      //funcion de retardo
-
-
-	    lcd_init(funciones_hal_lcd);
-
+	    LPM0;
 	}
 }

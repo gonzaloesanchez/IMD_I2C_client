@@ -106,7 +106,7 @@ static void toogle_enable_pin(void) {
 //----------------------------------------
 
 void lcd_send_byte(bool address, uint8_t n)  {
-    lcd_hw.bit_out(RS,LOW)
+    lcd_hw.bit_out(RS,LOW);
 
     lcd_hw.delay_ms(1);    //Ojo antes 60 us
 
@@ -152,7 +152,7 @@ void lcd_init(lcd_hal hw_functions)  {
     toogle_enable_pin();
 
 
-    lcd_send_byte(0,(0x20 | (lcd_type << 2)));  // Func set: ver lcd_type
+    lcd_send_byte(0,(0x20 | (LCD_TYPE << 2)));  // Func set: ver lcd_type
     lcd_hw.delay_ms(5);
 
     lcd_send_byte(0,0x08);                    // Display off
@@ -162,7 +162,7 @@ void lcd_init(lcd_hal hw_functions)  {
     lcd_hw.delay_ms(5);
 
     lcd_send_byte(0,0x06);                    // Increment cursor
-    delay_ms(5);
+    lcd_hw.delay_ms(5);
 
     lcd_send_byte(0,0x0E);                    //Cursor on
     lcd_hw.delay_ms(5);
@@ -194,7 +194,7 @@ void lcd_gotoxy(uint8_t x, uint8_t y)
 
 //-----------------------------
 void lcd_write(char c[])  {
-    int8 cont = 0;
+    uint8_t cont = 0;
     while(c[cont] != NULL) {
         if (c[cont] == '\n')
             lcd_gotoxy(1,0);
@@ -280,4 +280,3 @@ void clear_lcd_line(uint8_t linea, uint8_t cant_chars)  {
     lcd_send_byte(0, 0x80 | address);           //ir a principio de linea
 }
 
-#endif
