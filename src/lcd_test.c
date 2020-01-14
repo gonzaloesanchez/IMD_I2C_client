@@ -146,6 +146,8 @@ void main(void)  {
 	funciones_hal_lcd.nibble_out = output_nible;    //funcion salida nible
 	funciones_hal_lcd.bit_out = output_bit;         //funcion salida bit
 
+	_enable_interrupts();
+
 	lcd_init(funciones_hal_lcd);
 
 	lcd_gotoxy(0, 0);
