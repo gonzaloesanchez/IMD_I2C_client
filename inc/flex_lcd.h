@@ -61,7 +61,7 @@ struct _lcd_hal  {
 
 typedef struct _lcd_hal lcd_hal;
 
-void lcd_init(lcd_hal hw_functions);
+void lcd_init(lcd_hal* hw_functions);
 void lcd_gotoxy(uint8_t x, uint8_t y);
 void lcd_write(char c[]);
 

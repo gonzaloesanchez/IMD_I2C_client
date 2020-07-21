@@ -126,9 +126,9 @@ void lcd_send_byte(bool address, uint8_t n)  {
 }
 
 //----------------------------
-void lcd_init(lcd_hal hw_functions)  {
+void lcd_init(lcd_hal* hw_functions)  {
 
-    lcd_hw = hw_functions;
+    lcd_hw = *hw_functions;
 
     lcd_hw.bit_out(RS,LOW);
     lcd_hw.bit_out(EN,LOW);

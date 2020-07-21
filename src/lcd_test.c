@@ -10,20 +10,29 @@
 
 #define F1KHz 1000
 
-//P1.4 = LCD_DB4
-//P1.5 = LCD_DB5
-//P1.6 = LCD_DB6
-//P1.7 = LCD_DB7
-#define LCD_DB4_PIN     BIT4
-#define LCD_DB5_PIN     BIT5
-#define LCD_DB6_PIN     BIT6
-#define LCD_DB7_PIN     BIT7
+//P3.0 = LCD_DB4
+//P3.1 = LCD_DB5
+//P3.2 = LCD_DB6
+//P3.3 = LCD_DB7
+#define LCD_DB4_PIN     BIT0
+#define LCD_DB5_PIN     BIT1
+#define LCD_DB6_PIN     BIT2
+#define LCD_DB7_PIN     BIT3
 
-#define LCD_EN_PIN      BIT0
-#define LCD_RS_PIN      BIT1
+#define LCD_EN_PIN              BIT4
+#define LCD_RS_PIN              BIT6
+#define LCD_BACKLIGHT_PIN       BIT5
 
-#define LCD_DIR      P1DIR
-#define LCD_OUT      P1OUT
+#define LCD_DIR      P3DIR
+#define LCD_OUT      P3OUT
+
+
+#define LED_R_PIN   BIT3
+#define LED_A_PIN   BIT4
+#define LED_V_PIN   BIT5
+
+#define LEDS_DIR    P1DIR
+#define LEDS_OUT    P1OUT
 
 //TODO: Este micro tiene conversor AD, hacer multiplexacion de los 6 botones con esto
 //TODO: Si se complica puedo multiplexar con un CD (serie/paralelo)
@@ -53,6 +62,7 @@ __interrupt void    TimerA0_TA(void)  {
     TAIV_Status = TA0IV;
     if(TAIV_Status == TA0IV_TAIFG)  {
         msTicks++;
+       // ToggleBit(LEDS_OUT,LED_R_PIN);       //1ms prendido, 1ms apagado
         __low_power_mode_off_on_exit();
 
     }
@@ -74,7 +84,7 @@ void output_nible(uint8_t X) {
     /*
      * Se lee el valor actual del puerto para no afectar las señales de control
      * Se limpia la parte baja, se desplazan los bits recibidos como argumento
-     * 4 posiciones (nibble bajo pasa a ser nibble alto)
+     * 4 posiciones (nibble alto pasa a ser nibble alto, ver esquematico)
      * Se hace un OR con el valor anterior de la parte baja del puerto
      * se saca por el puerto.
      *
@@ -82,8 +92,8 @@ void output_nible(uint8_t X) {
      */
 
     puerto = LCD_OUT;
-    puerto &= 0x0F;
-    puerto |= (X & 0x0F) << 4;
+    puerto &= 0xF0;
+    puerto |= X & 0x0F;
     LCD_OUT = puerto;
 }
 
@@ -138,8 +148,13 @@ void main(void)  {
 	//MCLK = 1MHz; SMCLK = 1MHz
 	ConfigTimer0_A1();
 
+	RstBit(LCD_OUT,0xFF);
+	RstBit(LEDS_OUT,LED_R_PIN | LED_A_PIN | LED_V_PIN);
+
 	SetBit(LCD_DIR, LCD_DB4_PIN | LCD_DB5_PIN | LCD_DB6_PIN | LCD_DB7_PIN);    //LCD_DB [4..7] -> Salida
-	SetBit(LCD_DIR, LCD_EN_PIN | LCD_RS_PIN );    //Señales de control LCD (EN y RS) -> Salida
+	SetBit(LCD_DIR, LCD_EN_PIN | LCD_RS_PIN | LCD_BACKLIGHT_PIN );    //Señales de control LCD (EN y RS) y backlight-> Salida
+
+	SetBit(LEDS_DIR, LED_R_PIN | LED_A_PIN | LED_V_PIN );    //Leds R, A y V -> Salida
 
 
 	funciones_hal_lcd.delay_ms = delay_ms;          //funcion de retardo
@@ -148,10 +163,12 @@ void main(void)  {
 
 	_enable_interrupts();
 
-	lcd_init(funciones_hal_lcd);
+	lcd_init(&funciones_hal_lcd);
+
+	SetBit(LCD_OUT,LCD_BACKLIGHT_PIN);
 
 	lcd_gotoxy(0, 0);
-	lcd_write("Hola mundo!");
+	lcd_write("Hola Mundo!");
 
 	while(1)  	{
 	    LPM0;
