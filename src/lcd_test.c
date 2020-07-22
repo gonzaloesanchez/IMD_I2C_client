@@ -2,37 +2,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "flex_lcd.h"
-
-
-#define SetBit(Dir, Bit) Dir |= (Bit)
-#define RstBit(Dir, Bit) Dir &= ~(Bit)
-#define ToggleBit(Dir, Bit) Dir ^= (Bit)
-
-#define F1KHz 1000
-
-//P3.0 = LCD_DB4
-//P3.1 = LCD_DB5
-//P3.2 = LCD_DB6
-//P3.3 = LCD_DB7
-#define LCD_DB4_PIN     BIT0
-#define LCD_DB5_PIN     BIT1
-#define LCD_DB6_PIN     BIT2
-#define LCD_DB7_PIN     BIT3
-
-#define LCD_EN_PIN              BIT4
-#define LCD_RS_PIN              BIT6
-#define LCD_BACKLIGHT_PIN       BIT5
-
-#define LCD_DIR      P3DIR
-#define LCD_OUT      P3OUT
-
-
-#define LED_R_PIN   BIT3
-#define LED_A_PIN   BIT4
-#define LED_V_PIN   BIT5
-
-#define LEDS_DIR    P1DIR
-#define LEDS_OUT    P1OUT
+#include "hwDefs.h"
+#include "configs.h"
 
 //TODO: Este micro tiene conversor AD, hacer multiplexacion de los 6 botones con esto
 //TODO: Si se complica puedo multiplexar con un CD (serie/paralelo)
@@ -42,13 +13,6 @@ lcd_hal funciones_hal_lcd;
 uint32_t msTicks;
 
 
-void ConfigTimer0_A1(void)  {
-
-    TA0CTL = TACLR;                 //Hago un Clear al timer por las dudas
-    TA0CCR0 = F1KHz-1;              // Establece el periodo del PWM, dado por CCR0 (1000)
-    SetBit(TA0CTL, TASSEL_2 + ID_0 + MC_1 + TAIE);  //Fuente de clock SMCLK. Divisor de entrada: 1. Modo: Up
-                                                   //habilito interrupcion, comienza la cuenta
-}
 
 
 /************************************************
@@ -147,6 +111,7 @@ void main(void)  {
 	SetBit(BCSCTL2, SELM_0 + DIVM_0 + DIVS_0);          // MCLK = DCO/1, SMCLK = DCO/4
 	//MCLK = 1MHz; SMCLK = 1MHz
 	ConfigTimer0_A1();
+	configI2C();
 
 	RstBit(LCD_OUT,0xFF);
 	RstBit(LEDS_OUT,LED_R_PIN | LED_A_PIN | LED_V_PIN);
